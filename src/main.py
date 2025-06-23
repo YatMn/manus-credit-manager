@@ -18,8 +18,18 @@ CORS(app, supports_credentials=True)
 # 注册蓝图
 app.register_blueprint(user_bp, url_prefix='/api')
 
-# 数据库配置
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+# 数据库配置 - 使用相对路径，在部署环境中会自动创建
+# 在本地开发时使用持久化路径，在部署时使用相对路径
+if os.path.exists('/home/ubuntu/data'):
+    # 本地开发环境
+    persistent_db_path = '/home/ubuntu/data/app.db'
+else:
+    # 部署环境
+    persistent_db_path = os.path.join(os.path.dirname(__file__), 'database', 'app.db')
+    # 确保数据库目录存在
+    os.makedirs(os.path.dirname(persistent_db_path), exist_ok=True)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{persistent_db_path}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
